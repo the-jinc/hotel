@@ -1,0 +1,12 @@
+{
+  "name": "hotel-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-01-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hotel-db",
+      "database_id": "765d5185-3eef-43dd-aa91-3c4aadb8ab09"
+    }
+  ]
+}
