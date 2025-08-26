@@ -4,12 +4,9 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "frontend",
-	"main": "worker/index.ts",
-	"compatibility_date": "2025-08-21",
-	"assets": {
-		"not_found_handling": "single-page-application"
-	},
+	"name": "hotel-frontend",
+	"compatibility_date": "2025-08-22",
+	"pages_build_output_dir": "./dist",
 	"observability": {
 		"enabled": true
 	}

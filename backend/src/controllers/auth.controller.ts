@@ -46,7 +46,14 @@ export const register = async (
 
     const token = await sign(payload, c.env.JWT_SECRET);
 
-    return c.json({ token });
+    const safeUser = {
+      id: (newUser as any).id,
+      name: (newUser as any).name,
+      email: (newUser as any).email,
+      role: (newUser as any).role,
+    };
+
+    return c.json({ token, user: safeUser });
   } catch (err: any) {
     console.error("register error", err);
     return c.json({ error: "Internal server error" }, 500);
@@ -89,7 +96,14 @@ export const login = async (c: Context<{ Bindings: CloudflareBindings }>) => {
 
     const token = await sign(payload, c.env.JWT_SECRET);
 
-    return c.json({ token });
+    const safeUser = {
+      id: (user as any).id,
+      name: (user as any).name,
+      email: (user as any).email,
+      role: (user as any).role,
+    };
+
+    return c.json({ token, user: safeUser });
   } catch (err: any) {
     console.error("login error", err);
     return c.json({ error: "Internal server error" }, 500);

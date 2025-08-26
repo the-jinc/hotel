@@ -1,58 +1,103 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import cloudflareLogo from './assets/Cloudflare_Logo.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 
-function App() {
-  const [count, setCount] = useState(0)
-  const [name, setName] = useState('unknown')
+import UserPage from "./pages/BookNowPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import NotFound from './pages/NotFound';
+import useAuthStore from "./store/authStore";
+import UsersPage from "./admin/pages/UsersPage";
+import AdminRoute from './components/AdminRoute';
+import AdminLayout from './admin/layout/AdminLayout';
+import RoomsPage from './admin/pages/RoomsPage';
+import BooksPage from './admin/pages/BookingPage';
+import AdminDiningPage from './admin/pages/DiningPage';
+import AdminAvailabilityPage from './admin/pages/AdminAvailabilityPage';
+import AdminReviewsPage from './admin/pages/AdminReviewsPage';
+import AdminHomePage from './admin/pages/AdminDashboard';
+import UserLayout from './components/UserLayout';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import RoomDetailPage from './pages/RoomDetailPage';
+import GalleryPage from './pages/GalleryPage';
+import RoomsAndSuitesPage from './pages/RoomsAndSuitesPAge';
+import DiningPage from './pages/DiningPage';
+import MeetingsAndEventsPage from './admin/pages/MeetingAndEventsPage';
+import MeetingsEventsPage from './pages/MeetingsPage';
+import BookNowPage from './pages/BookNowPage';
+import MyBookingsPage from './pages/MyBookingsPage';
+import BookingSuccessPage from './pages/BookingSuccessPage';
+
+export default function App(): React.ReactElement {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
+  if (!isInitialized) {
+    return <div className="p-6 text-center">Loading...</div>; // or a spinner
+  }
 
   return (
-    <>
-      <div>
-        <a href='https://vite.dev' target='_blank'>
-          <img src={viteLogo} className='logo' alt='Vite logo' />
-        </a>
-        <a href='https://react.dev' target='_blank'>
-          <img src={reactLogo} className='logo react' alt='React logo' />
-        </a>
-        <a href='https://workers.cloudflare.com/' target='_blank'>
-          <img src={cloudflareLogo} className='logo cloudflare' alt='Cloudflare logo' />
-        </a>
-      </div>
-      <h1>Vite + React + Cloudflare</h1>
-      <div className='card'>
-        <button
-          onClick={() => setCount((count) => count + 1)}
-          aria-label='increment'
-        >
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <div className='card'>
-        <button
-          onClick={() => {
-            fetch('/api/')
-              .then((res) => res.json() as Promise<{ name: string }>)
-              .then((data) => setName(data.name))
-          }}
-          aria-label='get name'
-        >
-          Name from API is: {name}
-        </button>
-        <p>
-          Edit <code>worker/index.ts</code> to change the name
-        </p>
-      </div>
-      <p className='read-the-docs'>
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Router>
+      <Routes>
+        {/* User-facing routes */}
+        <Route element={<UserLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/gallery" element={<GalleryPage />} />
+          <Route path="/rooms" element={<RoomsAndSuitesPage />} />
+          <Route path="/dining" element={<DiningPage />} />
+          <Route path="/meetings" element={<MeetingsEventsPage />} />
+          <Route path="/rooms/:id" element={<RoomDetailPage />} />
+          <Route path="/book" element={<BookNowPage />} />
+          <Route path="/my-bookings" element={<MyBookingsPage />} />
+          <Route path="/booking-success" element={<BookingSuccessPage />} />
+          
+          <Route
+            path="/userpage"
+            element={
+              <ProtectedRoute>
+                <UserPage />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
 
-export default App
+        {/* Auth routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Admin routes */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route path="dashboard" element={<AdminHomePage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="rooms" element={<RoomsPage />} />
+          <Route path="dinings" element={<AdminDiningPage />} />
+          <Route path="meetings" element={<MeetingsAndEventsPage />} />
+          <Route path="bookings" element={<BooksPage />} />
+          <Route path="availability" element={<AdminAvailabilityPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
+        </Route>
+
+        {/* Catch all unmatched routes */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster position="top-right" />
+    </Router>
+  );
+}

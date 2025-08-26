@@ -11,8 +11,8 @@ export const authMiddleware = async (c: Context, next: Next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = await verify(token, c.env.JWT_SECRET);
-    c.set('user', decoded);
+  const decoded = await verify(token, c.env.JWT_SECRET);
+  c.set('jwtPayload', decoded);
     await next();
   } catch (error) {
     return c.json({ error: 'Invalid token' }, 401);
