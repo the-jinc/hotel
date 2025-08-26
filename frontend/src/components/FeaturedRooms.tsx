@@ -1,10 +1,9 @@
-// src/components/FeaturedRooms.jsx
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useRoomStore from '../store/roomStore';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import type { Room } from '../types/room'; // Import Room
 
 /**
  * Renders a section showcasing a selection of featured rooms with a luxury theme.
@@ -15,7 +14,7 @@ const FeaturedRooms = () => {
   const { rooms, fetchRooms } = useRoomStore();
   
   // State to manage the current image index for each room's carousel
-  const [currentImageIndices, setCurrentImageIndices] = useState({});
+  const [currentImageIndices, setCurrentImageIndices] = useState<{ [key: string]: number }>({});
 
   // Fetch rooms data on component mount
   useEffect(() => {
@@ -24,8 +23,8 @@ const FeaturedRooms = () => {
 
   // Initialize or update image indices when rooms data changes
   useEffect(() => {
-    const indices = {};
-    rooms.forEach(room => {
+    const indices: { [key: string]: number } = {};
+    rooms.forEach((room: Room) => { // Type room
       if (room.id) {
         indices[room.id] = 0;
       }
@@ -34,27 +33,27 @@ const FeaturedRooms = () => {
   }, [rooms]);
 
   // Filter and select up to 3 featured rooms that have a valid ID
-  const featured = rooms.filter(room => room.id).slice(0, 3);
+  const featured = rooms.filter((room: Room) => room.id).slice(0, 3); // Type room
 
   // Function to move to the next image in a room's carousel
-  const nextImage = (roomId) => {
-    const room = rooms.find(r => r.id === roomId);
+  const nextImage = (roomId: string) => { // Type roomId
+    const room = rooms.find((r: Room) => r.id === roomId); // Type r
     if (!room || !room.images) return;
     
     setCurrentImageIndices(prev => ({
       ...prev,
-      [roomId]: (prev[roomId] + 1) % room.images.length
+      [roomId]: (prev[roomId] + 1) % (room.images?.length || 1)
     }));
   };
 
   // Function to move to the previous image in a room's carousel
-  const prevImage = (roomId) => {
-    const room = rooms.find(r => r.id === roomId);
-    if (!room.images) return;
+  const prevImage = (roomId: string) => { // Type roomId
+    const room = rooms.find((r: Room) => r.id === roomId); // Type r
+    if (!room || !room.images) return; // Add null check for room
     
     setCurrentImageIndices(prev => ({
       ...prev,
-      [roomId]: (prev[roomId] - 1 + room.images.length) % room.images.length
+      [roomId]: (prev[roomId] - 1 + (room.images?.length || 1)) % (room.images?.length || 1)
     }));
   };
 
@@ -64,7 +63,7 @@ const FeaturedRooms = () => {
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">Featured Rooms</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featured.map(room => (
+          {featured.map((room: Room) => ( // Type room
             <motion.div 
               key={room.id}
               whileHover={{ y: -5 }}
@@ -72,10 +71,10 @@ const FeaturedRooms = () => {
             >
               {/* Image Carousel */}
               <div className="relative h-48 w-full bg-gray-200">
-                {room.images?.length > 0 ? (
+                {room.images && room.images.length > 0 ? ( // Optional chaining
                   <>
                     <img
-                      src={room.images[currentImageIndices[room.id] || 0]}
+                      src={room.images?.[currentImageIndices[room.id] || 0]}
                       alt={room.type}
                       className="w-full h-full object-cover transition-opacity duration-500 ease-in-out"
                     />
@@ -84,7 +83,7 @@ const FeaturedRooms = () => {
                     {room.images.length > 1 && (
                       <>
                         <button
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => { // Type e
                             e.stopPropagation();
                             prevImage(room.id);
                           }}
@@ -94,7 +93,7 @@ const FeaturedRooms = () => {
                           <ChevronLeftIcon className="h-5 w-5" />
                         </button>
                         <button
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => { // Type e
                             e.stopPropagation();
                             nextImage(room.id);
                           }}
@@ -107,12 +106,12 @@ const FeaturedRooms = () => {
                     )}
                     
                     {/* Image Indicators */}
-                    {room.images.length > 1 && (
+                    {room.images && room.images.length > 1 && (
                       <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                        {room.images.map((_, index) => (
+                        {room.images?.map((_, index: number) => ( // Type index
                           <button
                             key={index}
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => { // Type e
                               e.stopPropagation();
                               setCurrentImageIndices(prev => ({
                                 ...prev,

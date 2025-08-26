@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { motion } from 'framer-motion';
 
 // Using placeholder image URLs to ensure the component renders correctly

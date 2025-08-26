@@ -1,9 +1,10 @@
 // Testimonials.js
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import useReviewStore from "../store/reviewStore";
 import LoadingSpinner from "./LoadingSpinner";
+import type { Review } from '../types/review'; // Import Review
 
 const Testimonials = () => {
   const { publicReviews, loading, error, fetchPublicReviews } =
@@ -52,7 +53,7 @@ const Testimonials = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {publicReviews.map((review, index) => (
+            {publicReviews.map((review: Review, index: number) => ( // Typed review and index
               <motion.div
                 key={review.id}
                 initial={{ opacity: 0, y: 50 }}
@@ -71,7 +72,7 @@ const Testimonials = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        {review.userName.charAt(0).toUpperCase()}
+                        {review.userName?.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>

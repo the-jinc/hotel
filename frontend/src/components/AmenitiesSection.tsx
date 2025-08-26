@@ -1,5 +1,5 @@
 
-import React from 'react';
+
 import { StarIcon, SparklesIcon, WifiIcon } from '@heroicons/react/24/solid';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 

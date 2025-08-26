@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -6,35 +6,38 @@ import { toast } from "react-hot-toast";
 import { XMarkIcon, ArrowPathIcon, PlusCircleIcon, PencilSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
 import ImageUploader from "./ImageUploader";
 import ConfirmationDialog from './ConfirmationDialog';
+import type { MeetingsEventsFormModalProps, MeetingsEventsFormData } from '../types/meetingsEventsFormModalProps'; // Corrected import
+import type { MeetingAndEvent } from '../types/meetingAndEvent'; // Corrected import
+import { AxiosError } from 'axios'; // Import AxiosError
 
 const schema = yup.object().shape({
   name: yup.string().required("Event name is required").min(3, "Name must be at least 3 characters"),
   description: yup.string().required("Description is required").min(10, "Description must be at least 10 characters"),
-  capacity: yup.number().required("Capacity is required").integer().min(1, "Capacity must be at least 1"),
+  capacity: yup.number().required("Capacity is required").min(1, "Capacity must be at least 1").typeError("Capacity must be a number"),
   eventType: yup.string().required("Event type is required"),
 });
 
-export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubmit }) {
+export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubmit }: MeetingsEventsFormModalProps) { // Corrected function name and props
   // Only render if isOpen is true
   if (!isOpen) return null;
 
   const isEdit = !!event;
-  const [imageFiles, setImageFiles] = useState([]);
+  const [imageFiles, setImageFiles] = useState<(string | File)[]>([]); // Typed
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [formDataToSubmit, setFormDataToSubmit] = useState(null);
+  const [formDataToSubmit, setFormDataToSubmit] = useState<MeetingsEventsFormData | null>(null); // Typed
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<MeetingsEventsFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
       name: "",
       description: "",
-      capacity: 50,
+      capacity: 1,
       eventType: "MEETING",
     },
   });
@@ -53,14 +56,14 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
       reset({
         name: "",
         description: "",
-        capacity: 50,
+        capacity: 1,
         eventType: "MEETING",
       });
       setImageFiles([]);
     }
   }, [event, reset, isOpen]); // Added isOpen to dependency array
 
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = (data: MeetingsEventsFormData) => { // Corrected type
     if (imageFiles.length === 0) {
       toast.error("Please upload at least one image");
       return;
@@ -81,26 +84,25 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
     setIsSubmitting(true);
     
     try {
-      const eventData = {
+      const eventData: MeetingsEventsFormData = { // Corrected type
         ...formDataToSubmit,
-        capacity: parseInt(formDataToSubmit.capacity),
         images: [],
       };
 
       // Process images (keep existing URLs or upload new files)
       const processedImages = await Promise.all(
-        imageFiles.map(async (file) => {
+        imageFiles.map(async (file: string | File) => {
           if (typeof file === 'string') return file;
           return await uploadImage(file);
         })
       );
       
-      eventData.images = processedImages;
+      eventData.images = processedImages as string[]; // Cast to string[]
 
-      await onSubmit(eventData);
-      toast.success(`Event ${isEdit ? 'updated' : 'created'} successfully!`);
+      await onSubmit(eventData); // Pass eventData
+      toast.success(`Event ${isEdit ? 'updated' : 'created'} successfully!`); // Corrected message
       onClose();
-    } catch (err) {
+    } catch (err: AxiosError | any) {
       console.error(err);
       toast.error(err.response?.data?.message || "Something went wrong! Please try again.");
     } finally {
@@ -110,7 +112,7 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
   };
 
   // Mock image upload function - replace with your actual implementation
-  const uploadImage = async (file) => {
+  const uploadImage = async (file: File) => {
     return URL.createObjectURL(file); // Just for demo
   };
 
@@ -135,7 +137,7 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
                 <PlusCircleIcon className="h-6 w-6 text-green-600 mr-3" />
               )}
               <h3 className="text-2xl font-bold text-gray-900">
-                {isEdit ? "Edit Event" : "Create New Event"}
+                {isEdit ? "Edit Event" : "Create New Event"} {/* Corrected text */}
               </h3>
             </div>
             <button
@@ -151,13 +153,13 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
           <div className="flex-grow overflow-y-auto py-6">
             <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Event Name</label> {/* Corrected text */}
                 <input
                   id="name"
                   type="text"
                   {...register("name")}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g. Conference Hall, Wedding Venue"
+                  placeholder="e.g. Conference Room A, Grand Ballroom"
                   aria-invalid={errors.name ? "true" : "false"}
                 />
                 {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
@@ -169,7 +171,7 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
                   id="description"
                   {...register("description")}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Describe the event space features..."
+                  placeholder="Describe the event space..."
                   rows="4"
                   aria-invalid={errors.description ? "true" : "false"}
                 />
@@ -182,7 +184,7 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
                   <input
                     id="capacity"
                     type="number"
-                    {...register("capacity")}
+                    {...register("capacity", { valueAsNumber: true })} // Added valueAsNumber
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g. 100"
                     aria-invalid={errors.capacity ? "true" : "false"}
@@ -210,7 +212,7 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
               
               <ImageUploader 
                 onFileSelect={setImageFiles} 
-                initialImages={event?.images}
+                initialImages={event?.images} // Corrected prop name
                 label="Event Images"
                 multiple={true}
               />
@@ -268,14 +270,13 @@ export default function MeetingsEventsFormModal({ isOpen, event, onClose, onSubm
               ) : (
                 <>
                   <CheckIcon className="h-5 w-5 mr-2" />
-                  {isEdit ? "Update Event" : "Create Event"}
+                  {isEdit ? "Update Event" : "Create Event"} {/* Corrected text */}
                 </>
               )}
             </button>
           </div>
         </div>
       </div>
-      
       {/* Confirmation dialog for edits */}
       {isEdit && (
         <ConfirmationDialog

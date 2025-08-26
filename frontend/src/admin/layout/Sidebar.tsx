@@ -1,22 +1,33 @@
-import React, { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
-import { 
-  HomeIcon, 
-  UserGroupIcon, 
-  BuildingOffice2Icon, 
-  CalendarDaysIcon, 
-  StarIcon, 
-  ArrowLeftOnRectangleIcon, 
-  Bars3Icon, 
+import {
+  HomeIcon,
+  UserGroupIcon,
+  BuildingOffice2Icon,
+  CalendarDaysIcon,
+  StarIcon,
+  ArrowLeftOnRectangleIcon,
+  Bars3Icon,
   XMarkIcon,
-  ReceiptPercentIcon // New icon for Bookings
-} from '@heroicons/react/24/solid';
-import { BookOpenIcon, BriefcaseIcon, CakeIcon } from "@heroicons/react/24/outline";
+  // ReceiptPercentIcon // New icon for Bookings
+} from "@heroicons/react/24/solid";
+import {
+  BookOpenIcon,
+  BriefcaseIcon,
+  CakeIcon,
+} from "@heroicons/react/24/outline";
 
-export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+}
+
+export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+  // The isOpen and setIsOpen states are now managed by the parent component (AdminLayout)
+  // const [isOpen, setIsOpen] = useState(false); // This line is no longer needed here
+
   const [isConfirmLogoutOpen, setIsConfirmLogoutOpen] = useState(false); // State for the confirmation dialog
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,7 +37,7 @@ export default function Sidebar() {
   const handleLogout = () => {
     setIsConfirmLogoutOpen(true);
   };
-  
+
   // Function to handle the actual logout after confirmation
   const handleConfirmLogout = () => {
     logout();
@@ -41,15 +52,27 @@ export default function Sidebar() {
     { to: "/admin/dinings", label: "Dinings", icon: CakeIcon },
     { to: "/admin/meetings", label: "Meetings", icon: BriefcaseIcon },
     { to: "/admin/bookings", label: "Bookings", icon: BookOpenIcon },
-    { to: "/admin/availability", label: "Availability", icon: CalendarDaysIcon },
+    {
+      to: "/admin/availability",
+      label: "Availability",
+      icon: CalendarDaysIcon,
+    },
     { to: "/admin/reviews", label: "Reviews", icon: StarIcon },
   ];
 
   return (
     <>
-      <div className={`bg-gray-900 text-white flex flex-col fixed inset-y-0 left-0 z-50 transition-all duration-300 ${isOpen ? "w-64" : "w-20"}`}>
+      <div
+        className={`bg-gray-900 text-white flex flex-col fixed inset-y-0 left-0 z-50 transition-all duration-300 ${
+          isOpen ? "w-64" : "w-20"
+        }`}
+      >
         {/* Toggle button, always visible */}
-        <div className={`flex ${isOpen ? "justify-between items-center p-4" : "justify-center p-4"}`}>
+        <div
+          className={`flex ${
+            isOpen ? "justify-between items-center p-4" : "justify-center p-4"
+          }`}
+        >
           {isOpen && <h2 className="text-xl font-bold text-blue-400">Admin</h2>}
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -65,7 +88,11 @@ export default function Sidebar() {
         </div>
 
         {/* Main navigation links */}
-        <nav className={`flex-1 overflow-y-auto ${isOpen ? "mt-4 space-y-2 px-2" : "mt-2"}`}>
+        <nav
+          className={`flex-1 overflow-y-auto ${
+            isOpen ? "mt-4 space-y-2 px-2" : "mt-2"
+          }`}
+        >
           {navLinks.map((link) => {
             const isActive = location.pathname.startsWith(link.to);
             return (
@@ -74,9 +101,10 @@ export default function Sidebar() {
                 to={link.to}
                 className={`flex items-center rounded-lg transition-all duration-200
                   ${isOpen ? "px-4 py-3" : "justify-center p-3"}
-                  ${isActive
-                    ? "bg-gray-700 text-white border-l-4 border-blue-500 font-semibold"
-                    : "text-gray-300 hover:bg-gray-800"
+                  ${
+                    isActive
+                      ? "bg-gray-700 text-white border-l-4 border-blue-500 font-semibold"
+                      : "text-gray-300 hover:bg-gray-800"
                   }`}
               >
                 <link.icon className={`h-6 w-6 ${isOpen ? "mr-4" : ""}`} />
@@ -93,12 +121,14 @@ export default function Sidebar() {
             className={`w-full flex items-center justify-center rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors duration-200
               ${isOpen ? "p-3" : "p-3"}`}
           >
-            <ArrowLeftOnRectangleIcon className={`h-6 w-6 ${isOpen ? "mr-3" : ""}`} />
+            <ArrowLeftOnRectangleIcon
+              className={`h-6 w-6 ${isOpen ? "mr-3" : ""}`}
+            />
             {isOpen && <span className="text-sm font-semibold">Logout</span>}
           </button>
         </div>
       </div>
-      
+
       {/* Logout Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={isConfirmLogoutOpen}

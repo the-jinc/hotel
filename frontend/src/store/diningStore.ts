@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 import API from "../api/axios";
-
-interface Dining {
-  id: string;
-  // Add other dining properties as needed
-}
+import type { Dining } from '../types/dining'; // Import Dining
 
 interface DiningState {
   dinings: Dining[];

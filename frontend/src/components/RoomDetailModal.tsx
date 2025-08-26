@@ -1,40 +1,45 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
-import { 
-  XMarkIcon, 
-  StarIcon, 
-  TrashIcon, 
+import {
+  XMarkIcon,
+  StarIcon,
+  TrashIcon,
   PhotoIcon,
   ChevronLeftIcon,
-  ChevronRightIcon 
+  ChevronRightIcon
 } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import ConfirmationDialog from './ConfirmationDialog';
+import type { RoomDetailModalProps } from '../types/roomDetailModalProps'; // Import types
+import type { Room } from '../types/room'; // Import Room
+import type { User } from '../types/user'; // Import User
+import type { Review } from '../types/review'; // Import Review
+import { AxiosError } from 'axios'; // Import AxiosError
 
-export default function RoomDetailModal({ room, onClose, currentUser }) {
-  const [localReviews, setLocalReviews] = useState(room?.reviews || []);
+export default function RoomDetailModal({ room, onClose, currentUser }: RoomDetailModalProps) {
+  const [localReviews, setLocalReviews] = useState<Review[]>(room?.reviews || []); // Typed
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
-  const [reviewToDelete, setReviewToDelete] = useState(null);
+  const [reviewToDelete, setReviewToDelete] = useState<string | null>(null); // Typed
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   if (!room) return null;
 
-  const handleDeleteReview = (reviewId) => {
+  const handleDeleteReview = (reviewId: string) => { // Typed
     setReviewToDelete(reviewId);
     setIsConfirmDeleteOpen(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!reviewToDelete) return;
-    
+
     setIsConfirmDeleteOpen(false);
-    
+
     try {
       await axios.delete(`/api/reviews/${reviewToDelete}`);
-      setLocalReviews((prevReviews) => prevReviews.filter((r) => r.id !== reviewToDelete));
+      setLocalReviews((prevReviews: Review[]) => prevReviews.filter((r: Review) => r.id !== reviewToDelete)); // Typed
       toast.success("Review deleted successfully!");
       setReviewToDelete(null);
-    } catch (err) {
+    } catch (err: AxiosError | any) { // Typed
       console.error("Failed to delete review", err);
       toast.error("Failed to delete review. Please try again.");
     }
@@ -42,14 +47,14 @@ export default function RoomDetailModal({ room, onClose, currentUser }) {
 
   // Carousel navigation functions
   const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === room.images.length - 1 ? 0 : prevIndex + 1
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === (room.images?.length || 0) - 1 ? 0 : prevIndex + 1
     );
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === 0 ? room.images.length - 1 : prevIndex - 1
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? (room.images?.length || 0) - 1 : prevIndex - 1
     );
   };
 
@@ -72,13 +77,13 @@ export default function RoomDetailModal({ room, onClose, currentUser }) {
             {room.images?.length > 0 ? (
               <div className="relative w-full h-64 overflow-hidden rounded-lg shadow-md">
                 <img
-                  src={room.images[currentImageIndex]}
+                  src={room.images?.[currentImageIndex]}
                   alt={`Room image ${currentImageIndex + 1}`}
                   className="w-full h-full object-cover"
                 />
                 
                 {/* Navigation Arrows */}
-                {room.images.length > 1 && (
+                {room.images && room.images.length > 1 && (
                   <>
                     <button
                       onClick={prevImage}
@@ -98,9 +103,9 @@ export default function RoomDetailModal({ room, onClose, currentUser }) {
                 )}
                 
                 {/* Image Indicators */}
-                {room.images.length > 1 && (
+                {room.images && room.images.length > 1 && (
                   <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                    {room.images.map((_, index) => (
+                    {room.images?.map((_: string, index: number) => ( // Typed
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
@@ -143,7 +148,7 @@ export default function RoomDetailModal({ room, onClose, currentUser }) {
           </h3>
           {localReviews.length > 0 ? (
             <ul className="space-y-4 max-h-60 overflow-y-auto pr-2">
-              {localReviews.map((review) => (
+              {localReviews.map((review: Review) => ( // Typed
                 <li key={review.id} className="p-4 bg-gray-50 rounded-lg shadow-sm">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center">
@@ -188,5 +193,3 @@ export default function RoomDetailModal({ room, onClose, currentUser }) {
     </>
   );
 }
-
- 

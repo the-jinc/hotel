@@ -1,29 +1,30 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { motion } from 'framer-motion';
 import API from '../api/axios';
+import { AxiosError } from 'axios'; // Import AxiosError
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => { // Typed e
     e.preventDefault();
     setLoading(true);
     setMessage({ text: '', type: '' });
 
     try {
       await API.post('/newsletter/subscribe', { email });
-      setMessage({ 
-        text: 'Thank you for subscribing! You will receive our exclusive offers soon.', 
-        type: 'success' 
+      setMessage({
+        text: 'Thank you for subscribing! You will receive our exclusive offers soon.',
+        type: 'success'
       });
       setEmail('');
-    } catch (error) {
-      setMessage({ 
-        text: error.response?.data?.message || 'Subscription failed. Please try again.', 
-        type: 'error' 
+    } catch (error: AxiosError | any) { // Typed error
+      setMessage({
+        text: error.response?.data?.message || 'Subscription failed. Please try again.',
+        type: 'error'
       });
     } finally {
       setLoading(false);

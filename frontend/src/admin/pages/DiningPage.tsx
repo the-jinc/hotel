@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import useDiningStore from "../../store/diningStore";
+import type { Dining } from "../../types/dining"; // Import Dining from its new module
+import type { DiningFormData } from "../../types/diningFormModalProps";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import { ArrowPathIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
+  ArrowPathIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/solid";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import DiningFormModal from "../../components/DiningFormModal";
 
@@ -23,19 +24,19 @@ export default function DiningsPage() {
     limit,
     search,
     setPage,
-    setSearch
+    setSearch,
   } = useDiningStore();
 
-  const [selectedDining, setSelectedDining] = useState(null);
+  const [selectedDining, setSelectedDining] = useState<Dining | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [diningToDelete, setDiningToDelete] = useState(null);
+  const [diningToDelete, setDiningToDelete] = useState<Dining | null>(null);
 
   useEffect(() => {
     fetchDinings();
   }, [fetchDinings, page, limit, search]);
 
-  const handleCreate = async (diningData) => {
+  const handleCreate = async (diningData: DiningFormData) => {
     try {
       await createDining(diningData);
       setIsFormModalOpen(false);
@@ -45,9 +46,14 @@ export default function DiningsPage() {
     }
   };
 
-  const handleUpdate = async (id, diningData) => {
+  const handleUpdate = async (diningData: DiningFormData) => {
+    if (!selectedDining) return;
     try {
-      await updateDining(id, diningData);
+      await updateDining(selectedDining.id, {
+        ...selectedDining,
+        ...diningData,
+        images: diningData.images || [],
+      });
       setIsFormModalOpen(false);
       fetchDinings();
     } catch (err) {
@@ -55,7 +61,7 @@ export default function DiningsPage() {
     }
   };
 
-  const handleDelete = (dining) => {
+  const handleDelete = (dining: Dining) => {
     setDiningToDelete(dining);
     setIsDeleteDialogOpen(true);
   };
@@ -74,7 +80,7 @@ export default function DiningsPage() {
     }
   };
 
-  const handleOpenModal = (dining = null) => {
+  const handleOpenModal = (dining: Dining | null = null) => {
     setSelectedDining(dining);
     setIsFormModalOpen(true);
   };
@@ -97,7 +103,9 @@ export default function DiningsPage() {
               type="text"
               placeholder="Search dinings..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSearch(e.target.value)
+              }
               className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
@@ -121,12 +129,15 @@ export default function DiningsPage() {
         )}
 
         {error && (
-          <div className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm mb-6" role="alert">
+          <div
+            className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm mb-6"
+            role="alert"
+          >
             <ExclamationCircleIcon className="h-6 w-6 mr-3 flex-shrink-0" />
             <div>
               <p className="font-bold">Error fetching data</p>
               <p className="text-sm">{error}</p>
-              <button 
+              <button
                 onClick={fetchDinings}
                 className="mt-2 text-sm font-medium text-red-600 hover:text-red-500 flex items-center"
               >
@@ -160,8 +171,11 @@ export default function DiningsPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {dinings && dinings.length > 0 ? (
-                    dinings.map((dining) => (
-                      <tr key={dining.id} className="hover:bg-gray-50 transition-colors duration-150">
+                    dinings.map((dining: Dining) => (
+                      <tr
+                        key={dining.id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
                         <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {dining.name}
@@ -174,14 +188,16 @@ export default function DiningsPage() {
                         </td>
                         <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                           <div className="flex space-x-1">
-                            {dining.images?.slice(0, 3).map((image, index) => (
-                              <img 
-                                key={index} 
-                                src={image} 
-                                alt={`Dining ${index + 1}`} 
-                                className="h-8 w-8 object-cover rounded"
-                              />
-                            ))}
+                            {dining.images
+                              ?.slice(0, 3)
+                              .map((image: string, index: number) => (
+                                <img
+                                  key={index}
+                                  src={image}
+                                  alt={`Dining ${index + 1}`}
+                                  className="h-8 w-8 object-cover rounded"
+                                />
+                              ))}
                             {dining.images?.length > 3 && (
                               <span className="text-xs text-gray-500 self-center">
                                 +{dining.images.length - 3} more
@@ -211,7 +227,10 @@ export default function DiningsPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="px-4 py-6 sm:px-6 text-center text-gray-500 italic">
+                      <td
+                        colSpan={4}
+                        className="px-4 py-6 sm:px-6 text-center text-gray-500 italic"
+                      >
                         No dining options found.
                       </td>
                     </tr>
@@ -230,7 +249,9 @@ export default function DiningsPage() {
                 >
                   Previous
                 </button>
-                <span>Page {page} of {Math.ceil(total / limit)}</span>
+                <span>
+                  Page {page} of {Math.ceil(total / limit)}
+                </span>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page >= Math.ceil(total / limit)}
@@ -248,9 +269,11 @@ export default function DiningsPage() {
           isOpen={isFormModalOpen}
           onClose={handleCloseModal}
           dining={selectedDining}
-          onSubmit={selectedDining ? 
-            (data) => handleUpdate(selectedDining.id, data) : 
-            handleCreate}
+          onSubmit={
+            selectedDining
+              ? (data) => handleUpdate(data)
+              : (data) => handleCreate(data)
+          }
         />
 
         <ConfirmationDialog

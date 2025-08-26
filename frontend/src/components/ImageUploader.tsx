@@ -1,29 +1,29 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { PhotoIcon } from "@heroicons/react/24/outline";
+import type { ImageUploaderProps } from '../types/imageUploaderProps'; // Import types
 
-export default function ImageUploader({ 
-  onFileSelect, 
-  initialImages = [], 
-  label = "Upload images", 
-  multiple = true 
-}) {
+export default function ImageUploader({
+  onFileSelect,
+  initialImages = [],
+  label = "Upload images",
+  multiple = true
+}: ImageUploaderProps) {
   const [dragActive, setDragActive] = useState(false);
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null); // Typed
+  
 
-  const handleFileChange = (files) => {
+  const handleFileChange = (files: FileList | null) => { // Typed
     if (files && files.length > 0) {
       const fileArray = Array.from(files);
       if (multiple) {
-        // For multiple: add to existing selection
-        onFileSelect(prev => [...(prev || []), ...fileArray]);
+        onFileSelect([...(initialImages || []), ...fileArray]);
       } else {
-        // For single: replace existing
-        onFileSelect(fileArray[0]);
+        onFileSelect([fileArray[0]]);
       }
     }
   };
 
-  const handleDrag = (e) => {
+  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => { // Typed
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -33,7 +33,7 @@ export default function ImageUploader({
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => { // Typed
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -43,7 +43,7 @@ export default function ImageUploader({
   };
 
   const handleClick = () => {
-    inputRef.current.click();
+    inputRef.current?.click(); // Optional chaining
   };
 
   return (
@@ -64,7 +64,7 @@ export default function ImageUploader({
           id="image-upload"
           ref={inputRef}
           className="hidden"
-          onChange={(e) => handleFileChange(e.target.files)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFileChange(e.target.files)} // Typed
           accept="image/*"
           multiple={multiple}
         />

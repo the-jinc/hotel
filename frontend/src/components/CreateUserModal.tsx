@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "react-hot-toast";
 import { UserPlusIcon, XMarkIcon, ArrowPathIcon, CheckIcon } from "@heroicons/react/24/outline";
+import type { CreateUserModalProps, CreateUserFormData } from '../types/createUserModalProps'; // Import types
+import { AxiosError } from 'axios'; // Import AxiosError
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required").min(2),
@@ -12,24 +14,24 @@ const schema = yup.object().shape({
   role: yup.string().required("Role is required").oneOf(["user", "admin"]),
 });
 
-export default function CreateUserModal({ onClose, onSave }) {
+export default function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
   const [isSaving, setIsSaving] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<CreateUserFormData>({
     resolver: yupResolver(schema),
     defaultValues: { name: "", email: "", password: "", role: "user" },
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: CreateUserFormData) => {
     setIsSaving(true);
     try {
       await onSave(data);
       toast.success("User created successfully!");
       onClose();
-    } catch (err) {
+    } catch (err: AxiosError | any) {
       console.error("CreateUserModal error:", err.response?.data || err.message);
       toast.error(err?.response?.data?.message || "Creation failed. Please try again.");
     } finally {
@@ -39,7 +41,7 @@ export default function CreateUserModal({ onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 modal-overlay flex justify-center items-center z-[1000] p-4 animate-fade-in" aria-modal="true" role="dialog" onClick={onClose}>
-      <div className="relative bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg scale-95 animate-scale-up max-h-[95vh] flex flex-col" aria-labelledby="modal-title" onClick={(e) => e.stopPropagation()}>
+      <div className="relative bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg scale-95 animate-scale-up max-h-[95vh] flex flex-col">
         
         <div className="flex justify-between items-center pb-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center">

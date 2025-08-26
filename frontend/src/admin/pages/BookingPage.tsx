@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import useBookingStore from "../../store/bookingStore";
+import type { Booking } from "../../types/booking"; // Import Booking
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 
+import { MagnifyingGlassIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
-  MagnifyingGlassIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import { ArrowPathIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
+  ArrowPathIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/solid";
 
 export default function BookingsPage() {
   const {
@@ -28,29 +29,36 @@ export default function BookingsPage() {
 
   const [searchInput, setSearchInput] = useState("");
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [bookingToDelete, setBookingToDelete] = useState(null);
+  const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
   const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
-  const [bookingToUpdate, setBookingToUpdate] = useState(null);
-  const [newStatusToUpdate, setNewStatusToUpdate] = useState(null);
+  const [bookingToUpdate, setBookingToUpdate] = useState<Booking | null>(null);
+  const [newStatusToUpdate, setNewStatusToUpdate] = useState<
+    Booking["status"] | null
+  >(null);
 
   useEffect(() => {
     fetchBookings();
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, fetchBookings]);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchInput(value);
     setSearch(value);
     setPage(1);
   };
 
-  const handleStatusFilterChange = (e) => {
+  const handleStatusFilterChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setStatusFilter(e.target.value);
     setPage(1);
   };
 
   // Function to initiate the status change confirmation dialog
-  const handleStatusChange = (booking, newStatus) => {
+  const handleStatusChange = (
+    booking: Booking,
+    newStatus: Booking["status"]
+  ) => {
     if (newStatus === booking.status) return;
     setBookingToUpdate(booking);
     setNewStatusToUpdate(newStatus);
@@ -68,7 +76,7 @@ export default function BookingsPage() {
   };
 
   // Function to initiate the delete confirmation dialog
-  const handleDelete = (booking) => {
+  const handleDelete = (booking: Booking) => {
     setBookingToDelete(booking);
     setIsDeleteConfirmOpen(true);
   };
@@ -82,14 +90,26 @@ export default function BookingsPage() {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: Booking["status"]) => {
     switch (status) {
-      case "pending":
-        return <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>;
-      case "confirmed":
-        return <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Confirmed</span>;
-      case "cancelled":
-        return <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Cancelled</span>;
+      case "Pending":
+        return (
+          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+            Pending
+          </span>
+        );
+      case "Confirmed":
+        return (
+          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+            Confirmed
+          </span>
+        );
+      case "Cancelled":
+        return (
+          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+            Cancelled
+          </span>
+        );
       default:
         return null;
     }
@@ -103,7 +123,9 @@ export default function BookingsPage() {
         {/* Header and Controls */}
         {/* Uses flex-col on small screens and flex-row on medium screens and up */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-6">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-4 md:mb-0">Booking Management</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 mb-4 md:mb-0">
+            Booking Management
+          </h2>
         </div>
 
         {/* Search and Filter */}
@@ -126,12 +148,13 @@ export default function BookingsPage() {
           <select
             value={statusFilter}
             onChange={handleStatusFilterChange}
+            title="Filter bookings by status"
             className="w-full md:w-auto px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-200"
           >
             <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
 
@@ -139,11 +162,16 @@ export default function BookingsPage() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
             <ArrowPathIcon className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-blue-500" />
-            <p className="mt-4 text-base sm:text-lg font-medium">Loading bookings...</p>
+            <p className="mt-4 text-base sm:text-lg font-medium">
+              Loading bookings...
+            </p>
           </div>
         )}
         {error && (
-          <div className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm" role="alert">
+          <div
+            className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm"
+            role="alert"
+          >
             <ExclamationCircleIcon className="h-6 w-6 mr-3 flex-shrink-0" />
             <div>
               <p className="font-bold">Error fetching data</p>
@@ -160,30 +188,63 @@ export default function BookingsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   {/* The headers use a slightly smaller font on small screens */}
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Room</th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Check-in</th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Check-out</th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Room
+                  </th>
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Check-in
+                  </th>
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Check-out
+                  </th>
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-2 sm:px-6 sm:py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {bookings.length > 0 ? (
-                  bookings.map((b) => (
-                    <tr key={b.id} className="hover:bg-gray-50 transition-colors duration-150">
+                  bookings.map((b: Booking) => (
+                    <tr
+                      key={b.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
                       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{b.user.name}</div>
-                        <div className="text-xs text-gray-500">{b.user.email}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {b.user.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {b.user.email}
+                        </div>
                       </td>
                       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{b.roomType.type}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {b.roomType.type}
+                        </div>
                       </td>
                       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-600">{new Date(b.checkIn).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                        <div className="text-sm text-gray-600">
+                          {new Date(b.checkIn).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </div>
                       </td>
                       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-600">{new Date(b.checkOut).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                        <div className="text-sm text-gray-600">
+                          {new Date(b.checkOut).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </div>
                       </td>
                       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
                         {getStatusBadge(b.status)}
@@ -191,17 +252,32 @@ export default function BookingsPage() {
                       <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end items-center space-x-2">
                           <select
+                            aria-label="Booking status"
+                            title="Booking status"
                             value={b.status}
-                            onChange={(e) => handleStatusChange(b, e.target.value)}
+                            onChange={(e) =>
+                              handleStatusChange(
+                                b,
+                                e.target.value as Booking["status"]
+                              )
+                            }
                             className={`p-2 rounded-lg text-sm font-medium transition-colors duration-200
-                              ${b.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-gray-100 text-gray-800 border-gray-200'}
-                              ${b.status !== 'pending' ? 'opacity-70 cursor-not-allowed' : ''}
+                              ${
+                                b.status === "Pending"
+                                  ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                  : "bg-gray-100 text-gray-800 border-gray-200"
+                              }
+                              ${
+                                b.status !== "Pending"
+                                  ? "opacity-70 cursor-not-allowed"
+                                  : ""
+                              }
                             `}
-                            disabled={b.status !== 'pending'}
+                            disabled={b.status !== "Pending"}
                           >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Cancelled">Cancelled</option>
                           </select>
                           <button
                             onClick={() => handleDelete(b)}
@@ -216,7 +292,10 @@ export default function BookingsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-4 py-4 sm:px-6 sm:py-6 text-center text-gray-500 italic">
+                    <td
+                      colSpan={6}
+                      className="px-4 py-4 sm:px-6 sm:py-6 text-center text-gray-500 italic"
+                    >
                       No bookings found.
                     </td>
                   </tr>
@@ -231,9 +310,15 @@ export default function BookingsPage() {
         {!loading && !error && total > limit && (
           <div className="flex flex-col md:flex-row items-center justify-between mt-8">
             <p className="text-sm text-gray-700 mb-2 md:mb-0 text-center md:text-left">
-              Showing <span className="font-semibold">{Math.min(total, (page - 1) * limit + 1)}</span> to{" "}
-              <span className="font-semibold">{Math.min(total, page * limit)}</span> of{" "}
-              <span className="font-semibold">{total}</span> results
+              Showing{" "}
+              <span className="font-semibold">
+                {Math.min(total, (page - 1) * limit + 1)}
+              </span>{" "}
+              to{" "}
+              <span className="font-semibold">
+                {Math.min(total, page * limit)}
+              </span>{" "}
+              of <span className="font-semibold">{total}</span> results
             </p>
             <div className="flex space-x-2">
               <button
@@ -273,9 +358,9 @@ export default function BookingsPage() {
           onConfirm={handleConfirmStatusChange}
           title="Update Booking Status"
           message={
-            newStatusToUpdate === "confirmed"
+            newStatusToUpdate === "Confirmed"
               ? "Are you sure you want to confirm this booking?"
-              : "Are you sure you want to change the booking status to cancelled?"
+              : "Are you sure you want to change the booking status to Cancelled?"
           }
           confirmText="Confirm"
         />

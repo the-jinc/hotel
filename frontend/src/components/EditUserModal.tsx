@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "react-hot-toast";
 import { XMarkIcon, ArrowPathIcon, UserIcon, CheckIcon } from "@heroicons/react/24/outline";
 import ConfirmationDialog from './ConfirmationDialog'; // Assuming ConfirmationDialog is in the same directory or adjust path
+import type { EditUserModalProps, EditUserFormData } from '../types/editUserModalProps'; // Import types
+import type { User } from '../types/user'; // Import User
+import { AxiosError } from 'axios'; // Import AxiosError
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required").min(2, "Name must be at least 2 characters"),
@@ -12,17 +15,17 @@ const schema = yup.object().shape({
   role: yup.string().oneOf(["user", "admin"], "Invalid role").required("Role is required"),
 });
 
-export default function EditUserModal({ user, onClose, onSave }) {
+export default function EditUserModal({ user, onClose, onSave }: EditUserModalProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
-  const [dataToSave, setDataToSave] = useState(null);
+  const [dataToSave, setDataToSave] = useState<EditUserFormData | null>(null); // Typed
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<EditUserFormData>({
     resolver: yupResolver(schema),
   });
 
@@ -36,7 +39,7 @@ export default function EditUserModal({ user, onClose, onSave }) {
     }
   }, [user, reset]);
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: EditUserFormData) => {
     // Instead of saving directly, we open the confirmation dialog
     setDataToSave(data);
     setIsConfirmSaveOpen(true);
@@ -52,7 +55,7 @@ export default function EditUserModal({ user, onClose, onSave }) {
       await onSave(dataToSave);
       toast.success("User updated successfully!");
       onClose();
-    } catch (err) {
+    } catch (err: AxiosError | any) {
       console.error("EditUserModal error:", err.response?.data || err.message);
       toast.error(err?.response?.data?.message || "Failed to update user. Please try again.");
     } finally {
@@ -66,7 +69,7 @@ export default function EditUserModal({ user, onClose, onSave }) {
   return (
     <>
       <div className="fixed inset-0 modal-overlay flex justify-center items-center z-[1000] p-4 animate-fade-in" aria-modal="true" role="dialog" onClick={onClose}>
-        <div className="relative bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg scale-95 animate-scale-up max-h-[95vh] flex flex-col" aria-labelledby="modal-title" onClick={(e) => e.stopPropagation()}>
+        <div className="relative bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg scale-95 animate-scale-up max-h-[95vh] flex flex-col">
           
           <div className="flex justify-between items-center pb-4 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center">

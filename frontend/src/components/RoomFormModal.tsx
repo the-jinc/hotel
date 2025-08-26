@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -7,6 +7,9 @@ import useRoomStore from "../store/roomStore";
 import ImageUploader from "./ImageUploader";
 import { XMarkIcon, ArrowPathIcon, PlusCircleIcon, PencilSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
 import ConfirmationDialog from './ConfirmationDialog';
+import type { RoomFormModalProps, RoomFormData } from '../types/roomFormModalProps'; // Import types
+import type { Room } from '../types/room'; // Import Room
+import { AxiosError } from 'axios'; // Import AxiosError
 
 const schema = yup.object().shape({
   type: yup.string().required("Room type is required").min(3, "Type must be at least 3 characters"),
@@ -15,26 +18,26 @@ const schema = yup.object().shape({
   description: yup.string().required("Description is required").min(10, "Description must be at least 10 characters"),
 });
 
-export default function RoomFormModal({ room, onClose }) {
+export default function RoomFormModal({ room, onClose }: RoomFormModalProps) {
   const isEdit = !!room;
   const { createRoom, updateRoom } = useRoomStore();
-  const [imageFiles, setImageFiles] = useState([]);
+  const [imageFiles, setImageFiles] = useState<(string | File)[]>([]); // Typed
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [formDataToSubmit, setFormDataToSubmit] = useState(null);
+  const [formDataToSubmit, setFormDataToSubmit] = useState<RoomFormData | null>(null); // Typed
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<RoomFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
       type: "",
-      price: "",
+      price: 0, // Changed to number
       description: "",
-      quantity: "",
+      quantity: 0, // Changed to number
     },
   });
 
@@ -50,7 +53,7 @@ export default function RoomFormModal({ room, onClose }) {
     }
   }, [room, reset]);
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: RoomFormData) => { // Typed
     if (imageFiles.length === 0) {
       toast.error("Please upload at least one image");
       return;
@@ -65,32 +68,32 @@ export default function RoomFormModal({ room, onClose }) {
 
   const handleConfirmSubmit = async () => {
     if (!formDataToSubmit) return;
-    
+
     setIsConfirmOpen(false);
     setIsSubmitting(true);
-    
+
     try {
-      const roomData = {
+      const roomData: RoomFormData = {
         ...formDataToSubmit,
-        price: parseFloat(formDataToSubmit.price),
-        quantity: parseInt(formDataToSubmit.quantity),
+        price: parseFloat((formDataToSubmit as RoomFormData).price.toString()), // Explicitly cast and convert
+        quantity: parseInt((formDataToSubmit as RoomFormData).quantity.toString()), // Explicitly cast and convert
         images: [],
       };
 
       // Upload new images and keep existing URLs
       const processedImages = await Promise.all(
-        imageFiles.map(async (file) => {
+        imageFiles.map(async (file: string | File) => {
           if (typeof file === 'string') {
             return file; // Keep existing URLs
           }
-          return await uploadImage(file); // Upload new files
+          return await uploadImage(file);
         })
       );
       
-      roomData.images = processedImages;
+      roomData.images = processedImages as string[]; // Cast to string[]
 
       if (isEdit) {
-        await updateRoom(room.id, roomData);
+        await updateRoom(room!.id, roomData);
         toast.success("Room updated successfully!");
       } else {
         await createRoom(roomData);
@@ -98,7 +101,7 @@ export default function RoomFormModal({ room, onClose }) {
       }
 
       onClose();
-    } catch (err) {
+    } catch (err: AxiosError | any) {
       console.error(err);
       toast.error(err.response?.data?.message || "Something went wrong! Please try again.");
     } finally {
@@ -108,7 +111,7 @@ export default function RoomFormModal({ room, onClose }) {
   };
 
   // Mock image upload function - replace with your actual implementation
-  const uploadImage = async (file) => {
+  const uploadImage = async (file: File) => {
     // In a real app, you would upload to Cloudinary, S3, etc.
     return URL.createObjectURL(file); // Just for demo
   };
@@ -116,7 +119,7 @@ export default function RoomFormModal({ room, onClose }) {
   return (
     <>
       <div className="fixed inset-0 modal-overlay flex justify-center items-center z-[1000] p-4 animate-fade-in" aria-modal="true" role="dialog" onClick={onClose}>
-        <div className="relative bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg scale-95 animate-scale-up max-h-[95vh] flex flex-col" aria-labelledby="modal-title" onClick={(e) => e.stopPropagation()}>
+        <div className="relative bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg scale-95 animate-scale-up max-h-[95vh] flex flex-col">
           
           <div className="flex justify-between items-center pb-4 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center">
@@ -229,7 +232,7 @@ export default function RoomFormModal({ room, onClose }) {
             </form>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 flex-shrink-0">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}

@@ -1,4 +1,3 @@
-import React from "react";
 import AvailabilityCalendar from "../../components/AvailabilityCalendar";
 
 const AvailabilityCalendarPage = () => {

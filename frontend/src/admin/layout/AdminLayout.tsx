@@ -9,9 +9,9 @@ export default function AdminLayout() {
   return (
     <div className="flex">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      
+
       {/* Main Content Area */}
-      <main 
+      <main
         className={`flex-1 p-4 bg-gray-50 min-h-screen transition-all duration-300 ${
           isSidebarOpen ? "ml-64" : "ml-20"
         }`}

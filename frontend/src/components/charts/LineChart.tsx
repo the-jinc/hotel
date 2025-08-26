@@ -8,6 +8,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartOptions,
 } from 'chart.js';
 
 ChartJS.register(
@@ -20,12 +21,26 @@ ChartJS.register(
   Legend
 );
 
-export default function LineChart({ data }) {
-  const options = {
+interface LineChartData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    borderColor: string;
+    backgroundColor: string;
+  }[];
+}
+
+interface LineChartProps {
+  data: LineChartData;
+}
+
+export default function LineChart({ data }: LineChartProps) {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top',
+        position: 'top' as ChartOptions<'line'>['plugins']['legend']['position'],
       },
     },
     scales: {

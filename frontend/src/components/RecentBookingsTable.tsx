@@ -1,4 +1,7 @@
-export default function RecentBookingsTable({ bookings }) {
+import type { RecentBookingsTableProps } from '../types/recentBookingsTableProps'; // Import types
+import type { Booking } from '../types/booking'; // Import Booking
+
+export default function RecentBookingsTable({ bookings }: RecentBookingsTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
@@ -22,7 +25,7 @@ export default function RecentBookingsTable({ bookings }) {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {bookings.map((booking) => (
+          {bookings.map((booking: Booking) => ( // Typed booking
             <tr key={booking.id}>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gray-900">
@@ -52,9 +55,9 @@ export default function RecentBookingsTable({ bookings }) {
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  booking.status === 'confirmed' 
+                  booking.status === 'Confirmed' 
                     ? 'bg-green-100 text-green-800' 
-                    : booking.status === 'cancelled' 
+                    : booking.status === 'Cancelled' 
                       ? 'bg-red-100 text-red-800' 
                       : 'bg-yellow-100 text-yellow-800'
                 }`}>

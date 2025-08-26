@@ -1,12 +1,13 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import type { LoadingSpinnerProps } from '../types/loadingSpinnerProps'; // Import types
 
 export default function LoadingSpinner({
   size = 'md',
   color = 'primary',
   fullPage = false,
   className = '',
-}) {
-  const sizeClasses = {
+}: LoadingSpinnerProps) {
+  const sizeClasses: { [key: string]: string } = { // Added index signature
     xs: 'h-4 w-4',
     sm: 'h-5 w-5',
     md: 'h-6 w-6',
@@ -14,7 +15,7 @@ export default function LoadingSpinner({
     xl: 'h-10 w-10',
   };
 
-  const colorClasses = {
+  const colorClasses: { [key: string]: string } = { // Added index signature
     primary: 'text-indigo-600',
     secondary: 'text-gray-600',
     light: 'text-gray-300',

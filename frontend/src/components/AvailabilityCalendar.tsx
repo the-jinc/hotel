@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DateRange } from "react-date-range";
 import { addDays, format, startOfDay } from "date-fns";
 import useRoomStore from "../store/roomStore";
@@ -7,6 +7,7 @@ import "react-date-range/dist/theme/default.css";
 
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { ArrowPathIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
+import type { Range } from '../types/react-date-range'; // Import Range
 
 const AvailabilityCalendar = () => {
   const {
@@ -17,8 +18,8 @@ const AvailabilityCalendar = () => {
   } = useRoomStore();
 
   const [showPicker, setShowPicker] = useState(false);
-  const datePickerRef = useRef(null);
-  const [dateRange, setDateRange] = useState([
+  const datePickerRef = useRef<HTMLDivElement>(null); // Explicitly type useRef
+  const [dateRange, setDateRange] = useState<Range[]>([ // Explicitly type useState
     {
       startDate: startOfDay(new Date()),
       endDate: startOfDay(addDays(new Date(), 6)),
@@ -35,8 +36,8 @@ const AvailabilityCalendar = () => {
 
   // Handle closing the date picker when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => { // Type event
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) { // Add null check and cast event.target
         setShowPicker(false);
       }
     };
@@ -47,7 +48,7 @@ const AvailabilityCalendar = () => {
   }, [datePickerRef]);
 
   // Custom handler to close the picker after selecting a range
-  const handleDateSelect = (item) => {
+  const handleDateSelect = (item: { selection: Range }) => { // Type item
     setDateRange([
       {
         startDate: startOfDay(item.selection.startDate),
@@ -64,7 +65,7 @@ const AvailabilityCalendar = () => {
   const dates =
     roomTypes.length > 0
       ? Object.keys(availabilityCalendar[roomTypes[0]]).sort(
-          (a, b) => new Date(a) - new Date(b)
+          (a: string, b: string) => new Date(a).getTime() - new Date(b).getTime() // Explicitly type a and b
         )
       : [];
 
@@ -132,7 +133,7 @@ const AvailabilityCalendar = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="sticky left-0 bg-gray-50 border-r px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider z-10">Room Type</th>
-                {dates.map((date) => (
+                {dates.map((date: string) => ( // Type date
                   <th key={date} className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center border-l">
                     {format(new Date(date), "MMM d")}
                   </th>
@@ -140,12 +141,12 @@ const AvailabilityCalendar = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {roomTypes.map((roomType) => (
+              {roomTypes.map((roomType: string) => ( // Type roomType
                 <tr key={roomType}>
                   <td className="sticky left-0 bg-white border-r px-6 py-4 whitespace-nowrap font-semibold text-sm text-gray-900 z-10">
                     {roomType}
                   </td>
-                  {dates.map((date) => {
+                  {dates.map((date: string) => { // Type date
                     const entry = availabilityCalendar[roomType][date];
                     const isAvailable = entry.available > 0;
                     return (

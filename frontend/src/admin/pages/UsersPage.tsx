@@ -4,8 +4,19 @@ import EditUserModal from "../../components/EditUserModal";
 import EditMyAccountModal from "../../components/EditMyAccountModal";
 import CreateUserModal from "../../components/CreateUserModal";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
-import { PencilIcon, TrashIcon, UserPlusIcon, Cog6ToothIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { ExclamationCircleIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
+import {
+  PencilIcon,
+  TrashIcon,
+  UserPlusIcon,
+  Cog6ToothIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import {
+  ExclamationCircleIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/solid";
+import type { User } from "../../types/user"; // Import User
+import type { CreateUserFormData } from "../../types/createUserModalProps";
 
 export default function UsersPage() {
   const {
@@ -26,24 +37,24 @@ export default function UsersPage() {
     setSearch,
   } = useUserStore();
 
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editMyAccountOpen, setEditMyAccountOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers();
     fetchCurrentUser();
   }, [page, searchInput]);
 
-  const handleSave = async (formData) => {
-    await updateUser(selectedUser.id, formData);
+  const handleSave = async (formData: Partial<User>) => {
+    await updateUser(selectedUser!.id, formData); // Use non-null assertion as selectedUser will be present
     setSelectedUser(null);
   };
 
-  const handleMyAccountSave = async (formData) => {
+  const handleMyAccountSave = async (formData: Partial<User>) => {
     try {
       await updateCurrentUser(formData);
       setEditMyAccountOpen(false);
@@ -55,24 +66,24 @@ export default function UsersPage() {
 
   const totalPages = Math.ceil(total / limit);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchInput(value);
     setSearch(value);
     setPage(1);
   };
 
-  const handleCreateUser = async (formData) => {
+  const handleCreateUser = async (formData: CreateUserFormData) => {
     await createUser(formData);
     setCreateModalOpen(false);
     fetchUsers();
   };
 
-  const handleDelete = (user) => {
+  const handleDelete = (user: User) => {
     setUserToDelete(user);
     setIsDeleteDialogOpen(true);
   };
-  
+
   const handleConfirmDelete = async () => {
     if (userToDelete) {
       await deleteUser(userToDelete.id);
@@ -86,7 +97,9 @@ export default function UsersPage() {
       <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 md:p-8">
         {/* Header and Controls */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4 md:mb-0">User Management</h2>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4 md:mb-0">
+            User Management
+          </h2>
           <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-4">
             <button
               onClick={() => setCreateModalOpen(true)}
@@ -123,11 +136,16 @@ export default function UsersPage() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
             <ArrowPathIcon className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-blue-500" />
-            <p className="mt-2 text-base sm:text-lg font-medium">Loading users...</p>
+            <p className="mt-2 text-base sm:text-lg font-medium">
+              Loading users...
+            </p>
           </div>
         )}
         {error && (
-          <div className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm" role="alert">
+          <div
+            className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm"
+            role="alert"
+          >
             <ExclamationCircleIcon className="h-6 w-6 mr-3 flex-shrink-0" />
             <div>
               <p className="font-bold">Error fetching data</p>
@@ -142,26 +160,43 @@ export default function UsersPage() {
             <table className="min-w-full divide-y divide-gray-200 text-left">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 sm:px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-4 py-3 sm:px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-4 py-3 sm:px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-4 py-3 sm:px-6 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-3 sm:px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 sm:px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 sm:px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-4 py-3 sm:px-6 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.length > 0 ? (
-                  users.map((u) => (
-                    <tr key={u.id} className="hover:bg-gray-50 transition-colors duration-150">
+                  (users as User[]).map((u: User) => (
+                    <tr
+                      key={u.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{u.name}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {u.name}
+                        </div>
                       </td>
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                         <div className="text-sm text-gray-600">{u.email}</div>
                       </td>
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          u.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            u.role === "admin"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
                           {u.role}
                         </span>
                       </td>
@@ -187,7 +222,10 @@ export default function UsersPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-4 py-6 sm:px-6 text-center text-gray-500 italic">
+                    <td
+                      colSpan={4}
+                      className="px-4 py-6 sm:px-6 text-center text-gray-500 italic"
+                    >
                       No users found.
                     </td>
                   </tr>
@@ -201,9 +239,15 @@ export default function UsersPage() {
         {!loading && !error && total > limit && (
           <div className="flex flex-col md:flex-row items-center justify-between mt-6 sm:mt-8">
             <p className="text-sm text-gray-700 mb-2 md:mb-0">
-              Showing <span className="font-semibold">{Math.min(total, (page - 1) * limit + 1)}</span> to{" "}
-              <span className="font-semibold">{Math.min(total, page * limit)}</span> of{" "}
-              <span className="font-semibold">{total}</span> results
+              Showing{" "}
+              <span className="font-semibold">
+                {Math.min(total, (page - 1) * limit + 1)}
+              </span>{" "}
+              to{" "}
+              <span className="font-semibold">
+                {Math.min(total, page * limit)}
+              </span>{" "}
+              of <span className="font-semibold">{total}</span> results
             </p>
             <div className="flex space-x-2">
               <button
@@ -240,7 +284,10 @@ export default function UsersPage() {
           />
         )}
         {createModalOpen && (
-          <CreateUserModal onClose={() => setCreateModalOpen(false)} onSave={handleCreateUser} />
+          <CreateUserModal
+            onClose={() => setCreateModalOpen(false)}
+            onSave={handleCreateUser}
+          />
         )}
         {userToDelete && (
           <ConfirmationDialog

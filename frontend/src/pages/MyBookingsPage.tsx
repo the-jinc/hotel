@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useBookingStore from "../store/bookingStore";
 import useReviewStore from "../store/reviewStore";
@@ -32,7 +32,7 @@ const MyBookingsPage = () => {
     fetchMyBookings();
   }, [fetchMyBookings]);
 
-  const handleShowCancelModal = (bookingId) => {
+  const handleShowCancelModal = (bookingId: string) => {
     setBookingToCancel(bookingId);
     setShowCancelModal(true);
   };
@@ -41,9 +41,9 @@ const MyBookingsPage = () => {
     if (!bookingToCancel) return;
 
     try {
-      await updateBookingStatus(bookingToCancel, "cancelled");
+      await updateBookingStatus(bookingToCancel, "Cancelled");
       toast.success("Booking cancelled successfully");
-    } catch (err) {
+    } catch (err: any) {
       toast.error("Failed to cancel booking");
     } finally {
       setShowCancelModal(false);
@@ -51,10 +51,10 @@ const MyBookingsPage = () => {
     }
   };
 
-  const handleSubmitReview = async (bookingId, roomTypeId) => {
+  const handleSubmitReview = async (bookingId: string, roomTypeId: string) => {
     try {
       await createReview({
-        roomTypeId: roomTypeId, // Explicitly pass as number
+        roomTypeId: roomTypeId,
         rating: reviewData.rating,
         comment: reviewData.comment,
       });
@@ -67,28 +67,28 @@ const MyBookingsPage = () => {
     }
   };
 
-  const canReviewBooking = (booking) => {
+  const canReviewBooking = (booking: Booking) => {
     const isPastBooking = new Date(booking.checkOut) < new Date();
-    return booking.status === "confirmed" && isPastBooking;
+    return booking.status === "Confirmed" && isPastBooking;
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: Booking['status']) => {
     switch (status) {
-      case "confirmed":
+      case "Confirmed":
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 shadow-sm">
             <CheckIcon className="h-3 w-3 mr-1" />
             Confirmed
           </span>
         );
-      case "cancelled":
+      case "Cancelled":
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 shadow-sm">
             <XMarkIcon className="h-3 w-3 mr-1" />
             Cancelled
           </span>
         );
-      default:
+      case "Pending":
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 shadow-sm">
             <ClockIcon className="h-3 w-3 mr-1" />
@@ -172,7 +172,7 @@ const MyBookingsPage = () => {
                     </div>
 
                     <div className="mt-4 flex justify-end space-x-3">
-                      {booking.status === "pending" && (
+                      {booking.status === "Pending" && (
                         <button
                           onClick={() => handleShowCancelModal(booking.id)}
                           className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -249,7 +249,7 @@ const MyBookingsPage = () => {
 
                         <button
                           onClick={() =>
-                            handleSubmitReview(booking.id, booking.roomTypeId)
+                            handleSubmitReview(booking.id, booking.roomType.id)
                           }
                           disabled={!reviewData.comment.trim()}
                           className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${

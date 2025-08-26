@@ -1,6 +1,8 @@
 import { StarIcon } from '@heroicons/react/24/outline';
+import type { RecentReviewsTableProps } from '../types/recentReviewsTableProps'; // Import types
+import type { Review } from '../types/review'; // Import Review
 
-export default function RecentReviewsTable({ reviews }) {
+export default function RecentReviewsTable({ reviews }: RecentReviewsTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
@@ -21,7 +23,7 @@ export default function RecentReviewsTable({ reviews }) {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {reviews.map((review) => (
+          {reviews.map((review: Review) => ( // Typed review
             <tr key={review.id}>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gray-900">

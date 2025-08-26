@@ -4,6 +4,7 @@ import {
   ArcElement,
   Tooltip,
   Legend,
+  ChartOptions,
 } from 'chart.js';
 
 ChartJS.register(
@@ -12,12 +13,25 @@ ChartJS.register(
   Legend
 );
 
-export default function PieChart({ data }) {
-  const options = {
+interface PieChartData {
+  labels: string[];
+  datasets: {
+    data: number[];
+    backgroundColor: string[];
+    borderWidth: number;
+  }[];
+}
+
+interface PieChartProps {
+  data: PieChartData;
+}
+
+export default function PieChart({ data }: PieChartProps) {
+  const options: ChartOptions<'pie'> = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'right',
+        position: 'right' as ChartOptions<'pie'>['plugins']['legend']['position'],
       },
     },
     maintainAspectRatio: false

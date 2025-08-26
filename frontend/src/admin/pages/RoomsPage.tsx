@@ -4,6 +4,7 @@ import useUserStore from "../../store/userStore";
 import RoomFormModal from "../../components/RoomFormModal";
 import RoomDetailModal from "../../components/RoomDetailModal";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
+import type { Room } from "../../types/room";
 import {
   PlusIcon,
   EyeIcon,
@@ -15,16 +16,6 @@ import {
   ArrowPathIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/solid";
-
-// Minimal Room type aligned with store
-interface Room {
-  id: string;
-  type?: string;
-  price?: number;
-  quantity?: number;
-  description?: string;
-  images?: string[];
-}
 
 export default function RoomsPage() {
   const {

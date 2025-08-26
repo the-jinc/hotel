@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -22,7 +21,7 @@ const HeroSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleDotClick = (index) => {
+  const handleDotClick = (index: number) => { // Type index
     setCurrentImageIndex(index);
   };
 
@@ -52,7 +51,7 @@ const HeroSection = () => {
 
       {/* Carousel dots */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
-        {images.map((_, index) => (
+        {images.map((_: string, index: number) => ( // Type _ and index
           <button
             key={index}
             onClick={() => handleDotClick(index)}

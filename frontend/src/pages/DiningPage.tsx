@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Added useState here
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import useDiningStore from '../store/diningStore'; // Adjust the import path as needed
 

@@ -1,7 +1,7 @@
 // pages/RoomsAndSuitesPage.js
 // This component displays a list of all available rooms and suites.
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useRoomStore from '../store/roomStore';

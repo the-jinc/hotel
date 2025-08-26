@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import useBookingStore from "../store/bookingStore";
 import useRoomStore from "../store/roomStore";
 import useUserStore from "../store/userStore";
@@ -7,7 +7,6 @@ import {
   ArrowPathIcon,
   CurrencyDollarIcon,
   BookOpenIcon,
-  ChartBarIcon,
   UsersIcon,
   BuildingOffice2Icon,
   StarIcon,
@@ -27,59 +26,66 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { format, subDays, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
+import { format, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
+import type { Booking } from '../types/booking'; // Import Booking
+import type { Review } from '../types/review'; // Import Review
+import type { Room } from '../types/room'; // Import Room
 
 // A function to format numbers as currency
-const formatCurrency = (amount) => `$${Number(amount).toFixed(2)}`;
+const formatCurrency = (amount: number) => `$${Number(amount).toFixed(2)}`;
 
 // Helper to calculate total revenue from bookings
-const calculateTotalRevenue = (bookings) => 
-  bookings.reduce((sum, booking) => sum + parseFloat(booking.totalPrice), 0);
+const calculateTotalRevenue = (bookings: Booking[]) =>
+  bookings.reduce((sum: number, booking: Booking) => sum + parseFloat(booking.totalPrice.toString()), 0); // Ensure totalPrice is treated as number
 
 // Helper to calculate average review score
-const calculateAvgRating = (reviews) => {
+const calculateAvgRating = (reviews: Review[]) => {
   if (reviews.length === 0) return 0;
-  const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+  const total = reviews.reduce((sum: number, review: Review) => sum + review.rating, 0);
   return (total / reviews.length).toFixed(2);
 };
 
 // Helper to count bookings this week
-const countBookingsThisWeek = (bookings) => {
+const countBookingsThisWeek = (bookings: Booking[]) => {
   const now = new Date();
   const start = startOfWeek(now);
   const end = endOfWeek(now);
-  return bookings.filter(booking => isWithinInterval(new Date(booking.checkInDate), { start, end })).length;
+  return bookings.filter((booking: Booking) => isWithinInterval(new Date(booking.checkIn), { start, end })).length;
 };
 
 // Helper to generate chart data
-const processChartData = (bookings) => {
-  const revenueByDay = {};
-  const bookingsByStatus = { 'Confirmed': 0, 'Pending': 0, 'Cancelled': 0 };
-  const revenueByRoomType = {};
+const processChartData = (bookings: Booking[]) => {
+  const revenueByDay: { [key: string]: number } = {};
+  const bookingsByStatus: { [key: string]: number } = { 'Confirmed': 0, 'Pending': 0, 'Cancelled': 0 };
+  const revenueByRoomType: { [key: string]: number } = {};
 
-  bookings.forEach(booking => {
-    const dateObject = new Date(booking.checkInDate);
+  bookings.forEach((booking: Booking) => {
+    const dateObject = new Date(booking.checkIn);
     if (dateObject.getTime()) {
       const date = format(dateObject, 'yyyy-MM-dd');
       if (!revenueByDay[date]) {
         revenueByDay[date] = 0;
       }
-      revenueByDay[date] += parseFloat(booking.totalPrice);
+      revenueByDay[date] += parseFloat(booking.totalPrice.toString()); // Ensure totalPrice is treated as number
     }
-    bookingsByStatus[booking.status]++;
+    // Ensure status is one of the defined keys
+    if (booking.status in bookingsByStatus) {
+      bookingsByStatus[booking.status]++;
+    }
+
     if (booking.roomType) {
       const roomTypeName = booking.roomType.type;
       if (!revenueByRoomType[roomTypeName]) {
         revenueByRoomType[roomTypeName] = 0;
       }
-      revenueByRoomType[roomTypeName] += parseFloat(booking.totalPrice);
+      revenueByRoomType[roomTypeName] += parseFloat(booking.totalPrice.toString()); // Ensure totalPrice is treated as number
     }
   });
 
   const dailyRevenueChartData = Object.keys(revenueByDay).map(date => ({
     date,
     revenue: revenueByDay[date],
-  })).sort((a, b) => new Date(a.date) - new Date(b.date));
+  })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date
 
   const statusPieChartData = Object.keys(bookingsByStatus).map(status => ({
     name: status,
@@ -221,7 +227,7 @@ export default function AnalyticsDashboard() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(value)} />
+              <Tooltip formatter={(value: number) => formatCurrency(value)} />
               <Legend />
               <Line type="monotone" dataKey="revenue" stroke="#8884d8" name="Revenue" strokeWidth={2} activeDot={{ r: 8 }} />
             </LineChart>
@@ -242,24 +248,24 @@ export default function AnalyticsDashboard() {
                 fill="#8884d8"
                 label
               >
-                {analytics.statusPieChartData.map((entry, index) => (
+                {analytics.statusPieChartData.map((entry: { name: string; value: number }, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => `${value} bookings`} />
+              <Tooltip formatter={(value: number) => `${value} bookings`} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-lg col-span-full">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Revenue by Room Type</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analytics.roomTypeBarChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis formatter={(value) => formatCurrency(value)} />
-              <Tooltip formatter={(value) => formatCurrency(value)} />
+              <YAxis formatter={(value: number) => formatCurrency(value)} />
+              <Tooltip formatter={(value: number) => formatCurrency(value)} />
               <Legend />
               <Bar dataKey="revenue" fill="#82ca9d" name="Revenue" />
             </BarChart>

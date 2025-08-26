@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import useMeetingsEventsStore from "../../store/meetingAndEventsStore";
+import type { MeetingAndEvent } from "../../types/meetingAndEvent"; // Import MeetingAndEvent
+import type { MeetingsEventsFormData } from "../../types/meetingsEventsFormModalProps";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import { ArrowPathIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid';
+  ArrowPathIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/solid";
 import ConfirmationDialog from "../../components/ConfirmationDialog";
 import MeetingsEventsFormModal from "../../components/MeetingsEventsFormModal";
 
@@ -20,16 +21,20 @@ export default function MeetingsAndEventsPage() {
     meetingsAndEventsError: error,
   } = useMeetingsEventsStore();
 
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState<MeetingAndEvent | null>(
+    null
+  );
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState(null);
+  const [eventToDelete, setEventToDelete] = useState<MeetingAndEvent | null>(
+    null
+  );
 
   useEffect(() => {
     fetchMeetingsAndEvents();
   }, [fetchMeetingsAndEvents]);
 
-  const handleCreate = async (eventData) => {
+  const handleCreate = async (eventData: MeetingsEventsFormData) => {
     try {
       await createMeetingsAndEvents(eventData);
       setIsFormModalOpen(false);
@@ -39,9 +44,14 @@ export default function MeetingsAndEventsPage() {
     }
   };
 
-  const handleUpdate = async (id, eventData) => {
+  const handleUpdate = async (eventData: MeetingsEventsFormData) => {
+    if (!selectedEvent) return;
     try {
-      await updateMeetingsAndEvents(id, eventData);
+      await updateMeetingsAndEvents(selectedEvent.id, {
+        ...selectedEvent,
+        ...eventData,
+        images: eventData.images || [],
+      });
       setIsFormModalOpen(false);
       fetchMeetingsAndEvents();
     } catch (err) {
@@ -49,7 +59,7 @@ export default function MeetingsAndEventsPage() {
     }
   };
 
-  const handleDelete = (event) => {
+  const handleDelete = (event: MeetingAndEvent) => {
     setEventToDelete(event);
     setIsDeleteDialogOpen(true);
   };
@@ -68,7 +78,7 @@ export default function MeetingsAndEventsPage() {
     }
   };
 
-  const handleOpenModal = (event = null) => {
+  const handleOpenModal = (event: MeetingAndEvent | null = null) => {
     setSelectedEvent(event);
     setIsFormModalOpen(true);
   };
@@ -106,12 +116,15 @@ export default function MeetingsAndEventsPage() {
         )}
 
         {error && (
-          <div className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm mb-6" role="alert">
+          <div
+            className="flex items-center p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm mb-6"
+            role="alert"
+          >
             <ExclamationCircleIcon className="h-6 w-6 mr-3 flex-shrink-0" />
             <div>
               <p className="font-bold">Error fetching data</p>
               <p className="text-sm">{error}</p>
-              <button 
+              <button
                 onClick={fetchMeetingsAndEvents}
                 className="mt-2 text-sm font-medium text-red-600 hover:text-red-500 flex items-center"
               >
@@ -147,8 +160,11 @@ export default function MeetingsAndEventsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {meetingsAndEvents && meetingsAndEvents.length > 0 ? (
-                  meetingsAndEvents.map((event) => (
-                    <tr key={event.id} className="hover:bg-gray-50 transition-colors duration-150">
+                  meetingsAndEvents.map((event: MeetingAndEvent) => (
+                    <tr
+                      key={event.id}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {event.name}
@@ -161,19 +177,21 @@ export default function MeetingsAndEventsPage() {
                       </td>
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                         <div className="text-sm text-gray-600">
-                          {event.eventType.replace('_', ' ')}
+                          {event.eventType.replace("_", " ")}
                         </div>
                       </td>
                       <td className="px-4 py-4 sm:px-6 whitespace-nowrap">
                         <div className="flex space-x-1">
-                          {event.images?.slice(0, 3).map((image, index) => (
-                            <img 
-                              key={index} 
-                              src={image} 
-                              alt={`Event ${index + 1}`} 
-                              className="h-8 w-8 object-cover rounded"
-                            />
-                          ))}
+                          {event.images
+                            ?.slice(0, 3)
+                            .map((image: string, index: number) => (
+                              <img
+                                key={index}
+                                src={image}
+                                alt={`Event ${index + 1}`}
+                                className="h-8 w-8 object-cover rounded"
+                              />
+                            ))}
                           {event.images?.length > 3 && (
                             <span className="text-xs text-gray-500 self-center">
                               +{event.images.length - 3} more
@@ -203,7 +221,10 @@ export default function MeetingsAndEventsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="px-4 py-6 sm:px-6 text-center text-gray-500 italic">
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 sm:px-6 text-center text-gray-500 italic"
+                    >
                       No meetings or events found.
                     </td>
                   </tr>
@@ -218,9 +239,11 @@ export default function MeetingsAndEventsPage() {
           isOpen={isFormModalOpen}
           onClose={handleCloseModal}
           event={selectedEvent}
-          onSubmit={selectedEvent ? 
-            (data) => handleUpdate(selectedEvent.id, data) : 
-            handleCreate}
+          onSubmit={
+            selectedEvent
+              ? (data) => handleUpdate(data)
+              : (data) => handleCreate(data)
+          }
         />
 
         <ConfirmationDialog

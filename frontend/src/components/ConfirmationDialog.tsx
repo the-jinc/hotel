@@ -1,5 +1,5 @@
-import React from 'react';
 import { ExclamationTriangleIcon, ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import type { ConfirmationDialogProps } from '../types/confirmationDialogProps'; // Import ConfirmationDialogProps
 
 export default function ConfirmationDialog({
   isOpen,
@@ -11,7 +11,7 @@ export default function ConfirmationDialog({
   cancelText = "Cancel",
   isDestructive = false,
   isLoading = false,
-}) {
+}: ConfirmationDialogProps) {
   // If the dialog is not open, render nothing.
   if (!isOpen) return null;
 

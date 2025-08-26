@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   BuildingOffice2Icon, 
@@ -49,11 +49,11 @@ const Header = () => {
 
   // Close dropdowns when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (event.target.closest('.account-dropdown') === null) {
+    const handleClickOutside = (event: MouseEvent) => { // Type event
+      if (event.target instanceof Element && event.target.closest('.account-dropdown') === null) {
         setIsDropdownOpen(false);
       }
-      if (event.target.closest('.mobile-menu') === null && 
+      if (event.target instanceof Element && event.target.closest('.mobile-menu') === null && 
           event.target.closest('.mobile-menu-button') === null) {
         setIsMobileMenuOpen(false);
       }

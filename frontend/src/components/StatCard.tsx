@@ -1,7 +1,8 @@
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';
+import type { StatCardProps } from '../types/statCardProps'; // Import StatCardProps
 
-export default function StatCard({ title, value, icon: Icon, trend, change, color }) {
-  const colorVariants = {
+export default function StatCard({ title, value, icon: Icon, trend, change, color }: StatCardProps) {
+  const colorVariants: { [key: string]: string } = { // Inline type for simplicity
     indigo: 'bg-indigo-100 text-indigo-800',
     blue: 'bg-blue-100 text-blue-800',
     green: 'bg-green-100 text-green-800',
