@@ -1,0 +1,149 @@
+services:
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: hotel-postgres
+    environment:
+      POSTGRES_DB: hotel_db
+      POSTGRES_USER: hotel_user
+      POSTGRES_PASSWORD: hotel_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hotel_user -d hotel_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: hotel-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Grafana for monitoring dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hotel-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: false
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hotel-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hotel-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgres://hotel_user:hotel_password@postgres:5432/hotel_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost
+      # Admin seed configuration (always runs idempotently on startup)
+      ADMIN_EMAIL: admin@hotel.com
+      ADMIN_PASSWORD: password123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        echo 'Running admin seed (idempotent)...';
+        node dist/scripts/seedAdmin.js;
+        echo 'Starting API...';
+        node dist/index.js
+    restart: unless-stopped
+
+  # Frontend (for production deployment)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: hotel-frontend
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_URL: http://backend:3000
+    depends_on:
+      - backend
+    profiles:
+      - production
+
+  # Backup Scheduler (daily automated backups)
+  backup-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup-scheduler
+    container_name: hotel-backup-scheduler
+    environment:
+      BACKEND_URL: http://backend:3000
+      # Note: Set ADMIN_TOKEN in .env file or via environment variables
+      # This should be a valid JWT token for an admin user
+      ADMIN_TOKEN: ${BACKUP_ADMIN_TOKEN}
+    depends_on:
+      - backend
+    volumes:
+      - backup_logs:/var/log/backup
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+  redis_data:
+  backup_logs:
+  grafana_data:
+  prometheus_data:

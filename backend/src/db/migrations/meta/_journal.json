@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1759486529722,
+      "tag": "0000_burly_war_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1759519593470,
+      "tag": "0001_majestic_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759523374223,
+      "tag": "0002_sweet_zarda",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1759524192554,
+      "tag": "0003_amazing_madelyne_pryor",
+      "breakpoints": true
+    }
+  ]
+}
