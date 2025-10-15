@@ -1,12 +1,30 @@
 import { useAuthStore } from "@/store/authStore";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const DEFAULT_BASE = "/api";
+const RAW_API_BASE_URL = import.meta.env.VITE_API_URL || DEFAULT_BASE;
+
+const normalizeBaseURL = (base: string): string => {
+  if (!base) {
+    return "";
+  }
+
+  // Preserve protocol-based URLs as-is (strip trailing slash only)
+  if (/^https?:\/\//i.test(base)) {
+    return base.replace(/\/+$/, "");
+  }
+
+  // Ensure relative paths start with a single leading slash and have no trailing slash
+  const trimmed = base.startsWith("/") ? base : `/${base}`;
+  return trimmed.replace(/\/+$/, "");
+};
+
+const API_BASE_URL = normalizeBaseURL(RAW_API_BASE_URL);
 
 class ApiClient {
   private baseURL: string;
 
   constructor(baseURL: string) {
-    this.baseURL = baseURL;
+    this.baseURL = normalizeBaseURL(baseURL);
   }
 
   private getAuthHeaders(): Record<string, string> {
@@ -18,7 +36,7 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<{ success: boolean; data?: T; message?: string }> {
-    const url = `${this.baseURL}${endpoint}`;
+  const url = this.buildURL(endpoint);
 
     const config: RequestInit = {
       ...options,
@@ -98,6 +116,22 @@ class ApiClient {
     endpoint: string
   ): Promise<{ success: boolean; data?: T; message?: string }> {
     return this.request<T>(endpoint, { method: "DELETE" });
+  }
+
+  private buildURL(endpoint: string): string {
+    const cleanEndpoint = endpoint.startsWith("/")
+      ? endpoint
+      : `/${endpoint}`;
+
+    if (/^https?:\/\//i.test(this.baseURL)) {
+      return new URL(cleanEndpoint, this.baseURL).toString();
+    }
+
+    if (!this.baseURL) {
+      return cleanEndpoint;
+    }
+
+    return `${this.baseURL}${cleanEndpoint}`;
   }
 }
 

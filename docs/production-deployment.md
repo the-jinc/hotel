@@ -37,12 +37,13 @@ Add the following repository secrets (`Settings ▸ Secrets and variables ▸ Ac
 | `EC2_HOST` | Public hostname or IP of the EC2 instance |
 | `EC2_USER` | SSH username (e.g. `ubuntu`) |
 | `EC2_SSH_KEY` | Private key with access to the instance (PEM contents) |
+| `EC2_PORT` (optional) | Custom SSH port if not using 22 |
 | `BACKUP_ADMIN_TOKEN` | Admin JWT used by the backup scheduler |
 | `JWT_SECRET` | JWT signing key for the backend |
 | `FRONTEND_URL` | Public URL for the frontend (e.g. `https://hotel.example.com`) |
 | `ADMIN_EMAIL` | Admin seed email (idempotent) |
 | `ADMIN_PASSWORD` | Admin seed password |
-| `VITE_API_URL` | Public API URL that the frontend should call |
+| `VITE_API_URL` | API base URL for the frontend. Defaults to `/api` (proxied by the frontend container) |
 
 > You can omit optional secrets; defaults from `.env.production.example` will be used.
 

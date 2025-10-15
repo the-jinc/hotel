@@ -13,6 +13,7 @@ concurrency:
 env:
   PROJECT_ROOT: hotel
   REMOTE_PROJECT_DIR: ~/hotel
+  EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
 
 jobs:
   deploy:
@@ -28,17 +29,33 @@ jobs:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
       - name: Add EC2 host to known_hosts
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
+          if [ -z "${EC2_HOST}" ]; then
+            echo "EC2_HOST secret is empty" >&2
+            exit 1
+          fi
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 15 -p "${EC2_PORT}" "${EC2_HOST}" >> ~/.ssh/known_hosts 2>/dev/null; then
+              echo "Added ${EC2_HOST}:${EC2_PORT} to known_hosts"
+              exit 0
+            fi
+            echo "ssh-keyscan attempt ${attempt} failed for ${EC2_HOST}:${EC2_PORT}; retrying in 5s" >&2
+            sleep 5
+          done
+          echo "Unable to reach ${EC2_HOST}:${EC2_PORT}. Check EC2 security group and public accessibility." >&2
+          exit 1
 
       - name: Ensure project directory exists on EC2
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${REMOTE_PROJECT_DIR}"
+          ssh -p ${EC2_PORT} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${REMOTE_PROJECT_DIR}"
 
       - name: Sync project to EC2
         run: |
-          rsync -az --delete \
+          rsync -az -e "ssh -p ${EC2_PORT}" --delete \
             --exclude '.git' \
             --exclude 'node_modules' \
             --exclude 'backend/node_modules' \
@@ -70,8 +87,8 @@ jobs:
         env:
           BACKUP_ADMIN_TOKEN: ${{ secrets.BACKUP_ADMIN_TOKEN }}
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "set -euo pipefail; cd ${REMOTE_PROJECT_DIR}; export BACKUP_ADMIN_TOKEN='${BACKUP_ADMIN_TOKEN}'; docker compose --env-file .env.production --profile production up -d --build; docker image prune -f"
+          ssh -p ${EC2_PORT} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "set -euo pipefail; cd ${REMOTE_PROJECT_DIR}; export BACKUP_ADMIN_TOKEN='${BACKUP_ADMIN_TOKEN}'; docker compose --env-file .env.production --profile production up -d --build; docker image prune -f"
 
       - name: Verify running services
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cd ${REMOTE_PROJECT_DIR}; docker compose ps"
+          ssh -p ${EC2_PORT} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cd ${REMOTE_PROJECT_DIR}; docker compose ps"

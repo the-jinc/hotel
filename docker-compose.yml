@@ -119,7 +119,7 @@ services:
     ports:
       - "80:80"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://backend:3000}
+      VITE_API_URL: ${VITE_API_URL:-/api}
     depends_on:
       - backend
     profiles:
