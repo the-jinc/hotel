@@ -1,0 +1,77 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  PROJECT_ROOT: hotel
+  REMOTE_PROJECT_DIR: ~/hotel
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Add EC2 host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Ensure project directory exists on EC2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${REMOTE_PROJECT_DIR}"
+
+      - name: Sync project to EC2
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude 'backend/node_modules' \
+            --exclude 'frontend/node_modules' \
+            --exclude '.github/workflows/*.yml~' \
+            ./ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.REMOTE_PROJECT_DIR }}
+
+      - name: Render production env file
+        env:
+          BACKUP_ADMIN_TOKEN: ${{ secrets.BACKUP_ADMIN_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          printf '%s\n' \
+            "BACKUP_ADMIN_TOKEN=${BACKUP_ADMIN_TOKEN}" \
+            "JWT_SECRET=${JWT_SECRET}" \
+            "FRONTEND_URL=${FRONTEND_URL}" \
+            "ADMIN_EMAIL=${ADMIN_EMAIL}" \
+            "ADMIN_PASSWORD=${ADMIN_PASSWORD}" \
+            "VITE_API_URL=${VITE_API_URL}" \
+            > .deploy-env
+          rsync -az .deploy-env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.REMOTE_PROJECT_DIR }}/.env.production
+          rm .deploy-env
+
+      - name: Deploy on EC2 via Docker Compose
+        env:
+          BACKUP_ADMIN_TOKEN: ${{ secrets.BACKUP_ADMIN_TOKEN }}
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "set -euo pipefail; cd ${REMOTE_PROJECT_DIR}; export BACKUP_ADMIN_TOKEN='${BACKUP_ADMIN_TOKEN}'; docker compose --env-file .env.production --profile production up -d --build; docker image prune -f"
+
+      - name: Verify running services
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cd ${REMOTE_PROJECT_DIR}; docker compose ps"

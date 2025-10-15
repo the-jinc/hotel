@@ -1,7 +1,7 @@
 FROM alpine:3.18
 
-# Install curl and dcron
-RUN apk add --no-cache curl dcron bash
+# Install curl, cron daemon, bash, and tini for proper signal handling
+RUN apk add --no-cache curl dcron bash tini
 
 # Create backup user
 RUN adduser -D -s /bin/bash backup
@@ -16,20 +16,15 @@ RUN mkdir -p /var/log/backup && chown backup:backup /var/log/backup
 # Setup cron job for daily backup at 2 AM
 RUN echo "0 2 * * * /usr/local/bin/backup-cron.sh >> /var/log/backup/backup.log 2>&1" | crontab -u backup -
 
-# Create startup script
-RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
-    echo 'echo "Starting backup scheduler..."' >> /usr/local/bin/start.sh && \
-    echo 'echo "Daily backup scheduled for 2:00 AM"' >> /usr/local/bin/start.sh && \
-    echo 'echo "Current time: $(date)"' >> /usr/local/bin/start.sh && \
-    echo 'echo "Next backup: $(date -d "tomorrow 02:00")"' >> /usr/local/bin/start.sh && \
-    echo 'exec crond -f -d 0' >> /usr/local/bin/start.sh && \
-    chmod +x /usr/local/bin/start.sh
+# Copy startup script (runs as root to launch cron; cron jobs execute under backup user)
+COPY scripts/start-backup.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
-# Switch to backup user
-USER backup
-
-# Set working directory
+# Set working directory for generated artifacts/logs
 WORKDIR /home/backup
 
-# Start cron daemon
+# Entrypoint via tini to avoid PID 1 issues when launching crond
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start cron daemon via startup script
 CMD ["/usr/local/bin/start.sh"]

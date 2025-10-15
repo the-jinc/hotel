@@ -77,16 +77,16 @@ services:
       dockerfile: Dockerfile
     container_name: hotel-backend
     environment:
-      NODE_ENV: development
-      PORT: 3000
-      DATABASE_URL: postgres://hotel_user:hotel_password@postgres:5432/hotel_db
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
-      JWT_EXPIRES_IN: 7d
-      FRONTEND_URL: http://localhost
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${BACKEND_PORT:-3000}
+      DATABASE_URL: ${DATABASE_URL:-postgres://hotel_user:hotel_password@postgres:5432/hotel_db}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       # Admin seed configuration (always runs idempotently on startup)
-      ADMIN_EMAIL: admin@hotel.com
-      ADMIN_PASSWORD: password123
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@hotel.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password123}
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,10 +100,13 @@ services:
       - /bin/sh
       - -c
       - >-
+        set -euo pipefail;
+        echo 'Running migrations...';
+        node dist/db/migrate.js;
         echo 'Running admin seed (idempotent)...';
-        node dist/scripts/seedAdmin.js;
+        node dist/scripts/seedAdmin.js || echo 'Admin seed skipped';
         echo 'Starting API...';
-        node dist/index.js
+        exec node dist/index.js
     restart: unless-stopped
 
   # Frontend (for production deployment)
@@ -116,7 +119,7 @@ services:
     ports:
       - "80:80"
     environment:
-      VITE_API_URL: http://backend:3000
+      VITE_API_URL: ${VITE_API_URL:-http://backend:3000}
     depends_on:
       - backend
     profiles:

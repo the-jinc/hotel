@@ -195,6 +195,22 @@ Uses `docker-compose.dev.yml` to run only database services, allowing local deve
 
 Uses `docker-compose.yml` to run the complete application stack.
 
+#### Environment overrides
+
+Copy `.env.production.example` to `.env.production` and fill in the required secrets (JWT key, admin seed credentials, public frontend URL, backup admin token, etc). The file is ignored by git, but `docker compose --env-file .env.production --profile production up -d --build` will pick it up automatically.
+
+#### GitHub Actions deployment
+
+A workflow (`.github/workflows/deploy-ec2.yml`) is available to deploy the stack to an EC2 host. Provide the following GitHub secrets before enabling it:
+
+- `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY` – SSH connection details
+- `BACKUP_ADMIN_TOKEN` – JWT used by the backup scheduler container
+- Optional: `JWT_SECRET`, `FRONTEND_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `VITE_API_URL`
+
+The workflow rsyncs the repository to the remote server, writes `.env.production`, and runs `docker compose --profile production up -d --build` remotely. It can run on push to `main` or manually via the Actions tab.
+
+The backend container automatically executes database migrations on startup before running the idempotent admin seeder.
+
 ## 📋 Environment Variables
 
 ### Backend (.env)

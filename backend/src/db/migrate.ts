@@ -1,22 +1,35 @@
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { db, connection } from "./index.js";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-async function runMigrate() {
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+
+import { connection, db } from "./index.js";
+
+async function main() {
   console.log("⏳ Running migrations...");
 
   const start = Date.now();
 
-  await migrate(db, { migrationsFolder: "./src/db/migrations" });
+  const migrationsFolder = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "../db/migrations"
+  );
+
+  await migrate(db, { migrationsFolder });
 
   const end = Date.now();
 
   console.log(`✅ Migrations completed in ${end - start}ms`);
-
-  process.exit(0);
 }
 
-runMigrate().catch((err) => {
-  console.error("❌ Migration failed");
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .then(async () => {
+    await connection.end();
+    process.exit(0);
+  })
+  .catch(async (err) => {
+    console.error("❌ Migration failed");
+    console.error(err);
+    await connection.end().catch(() => undefined);
+    process.exit(1);
+  });

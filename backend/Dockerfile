@@ -36,6 +36,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy the built application and dependencies from the builder stage
 COPY --from=builder --chown=hono:nodejs /app/node_modules /app/node_modules
 COPY --from=builder --chown=hono:nodejs /app/dist /app/dist
+COPY --chown=hono:nodejs ./src/db/migrations /app/dist/db/migrations
 COPY --from=builder --chown=hono:nodejs /app/package.json /app/package.json
 
 # Switch to the non-root user
@@ -45,4 +46,4 @@ USER hono
 EXPOSE 3000
 
 # Start the application
-CMD ["node", "/app/dist/index.js"]
+CMD ["sh", "-c", "node /app/dist/db/migrate.js && node /app/dist/index.js"]
