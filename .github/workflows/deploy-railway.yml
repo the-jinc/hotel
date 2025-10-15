@@ -40,7 +40,7 @@ jobs:
             exit 1
           fi
 
-          railway login --token "${RAILWAY_TOKEN}"
+          railway login
 
           if [ -n "${RAILWAY_PROJECT}" ]; then
             railway project switch "${RAILWAY_PROJECT}"
