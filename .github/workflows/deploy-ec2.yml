@@ -17,6 +17,7 @@ env:
 
 jobs:
   deploy:
+    if: ${{ false }}
     name: Build and Deploy
     runs-on: ubuntu-latest
     steps:

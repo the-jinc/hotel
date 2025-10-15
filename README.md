@@ -201,14 +201,14 @@ Copy `.env.production.example` to `.env.production` and fill in the required sec
 
 #### GitHub Actions deployment
 
-A workflow (`.github/workflows/deploy-ec2.yml`) is available to deploy the stack to an EC2 host. Provide the following GitHub secrets before enabling it:
+Two GitHub Actions workflows cover production deployments:
 
-- `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY` – SSH connection details
-- Optional: `EC2_PORT` – custom SSH port (defaults to 22)
-- `BACKUP_ADMIN_TOKEN` – JWT used by the backup scheduler container
-- Optional: `JWT_SECRET`, `FRONTEND_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `VITE_API_URL`
+- `.github/workflows/deploy-railway.yml` deploys the stack to Railway when you push to `main` or trigger it manually. Configure `RAILWAY_TOKEN` (required) and optionally `RAILWAY_PROJECT`, `RAILWAY_ENVIRONMENT`.
+- `.github/workflows/deploy-ec2.yml` syncs the repository to an EC2 host over SSH before running `docker compose --profile production up -d --build`. Configure `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`, and optionally `EC2_PORT`.
 
-The workflow rsyncs the repository to the remote server, writes `.env.production`, and runs `docker compose --profile production up -d --build` remotely. It can run on push to `main` or manually via the Actions tab.
+Set these application secrets when they apply to your deployment target: `BACKUP_ADMIN_TOKEN`, `JWT_SECRET`, `FRONTEND_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `VITE_API_URL`.
+
+The Railway workflow logs in via the CLI and issues `railway up` for backend, frontend, and the optional backup scheduler service. The EC2 workflow writes `.env.production` on the host before running Docker Compose.
 
 The backend container automatically executes database migrations on startup before running the idempotent admin seeder.
 
@@ -231,7 +231,7 @@ FRONTEND_URL=http://localhost:5173
 ### Frontend (.env)
 
 ```env
-VITE_API_URL=http://localhost:3000
+VITE_API_URL=/api
 ```
 
 ## 🤝 Contributing
